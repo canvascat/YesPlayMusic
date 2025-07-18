@@ -3,6 +3,7 @@ import _state from '../state';
 import shortcuts from '@/utils/shortcuts';
 import { cloneDeep } from 'es-toolkit';
 import { getSendSettingsPlugin, localStoragePiniaPlugin } from './plugins';
+import type { GlobalState, Track, User, Playlist, Album, Artist, MV } from '@/types';
 
 import { isAccountLoggedIn, isLooseLoggedIn } from '@/utils/auth';
 import { likeATrack } from '@/api/track';
