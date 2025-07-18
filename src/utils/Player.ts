@@ -11,7 +11,8 @@ import { isCreateMpris, isCreateTray } from '@/utils/platform';
 import { Howl, Howler } from 'howler';
 import { shuffle } from 'es-toolkit';
 import { decode as base642Buffer } from '@/utils/base64';
-import { toast } from 'vue-sonner'
+import { toast } from 'vue-sonner';
+import type { Track, RepeatMode, PlaylistSource } from '@/types';
 
 const PLAY_PAUSE_FADE_DURATION = 200;
 
@@ -24,16 +25,18 @@ const INDEX_IN_PLAY_NEXT = -1;
 const UNPLAYABLE_CONDITION = {
   PLAY_NEXT_TRACK: 'playNextTrack',
   PLAY_PREV_TRACK: 'playPrevTrack',
-};
+} as const;
 
-const delay = (ms = 0) => new Promise<void>(resolve => setTimeout(resolve, ms));
+type UnplayableCondition = typeof UNPLAYABLE_CONDITION[keyof typeof UNPLAYABLE_CONDITION];
+
+const delay = (ms: number = 0): Promise<void> => new Promise<void>(resolve => setTimeout(resolve, ms));
 const excludeSaveKeys = [
   '_playing',
   '_personalFMLoading',
   '_personalFMNextLoading',
 ];
 
-function setTitle(track) {
+function setTitle(track: Track | null): void {
   document.title = track
     ? `${track.name} · ${track.ar[0].name} - YesPlayMusic`
     : 'YesPlayMusic';
@@ -43,7 +46,7 @@ function setTitle(track) {
   useStore().updateTitle(document.title);
 }
 
-function setTrayLikeState(isLiked) {
+function setTrayLikeState(isLiked: boolean): void {
   if (isCreateTray) {
     window.ipcRenderer?.send('updateTrayLikeState', isLiked);
   }
@@ -59,7 +62,7 @@ export default class Player {
   /** 是否启用Player */
   private _enabled: boolean = false;
   /** 循环模式 */
-  private _repeatMode: 'off' | 'on' | 'one' = 'off';
+  private _repeatMode: RepeatMode = 'off';
   /** 是否随机播放 */
   private _shuffle: boolean = false;
   /** 是否倒序播放 */
@@ -83,17 +86,17 @@ export default class Player {
   /** 当前播放歌曲在随机列表里面的index */
   private _shuffledCurrent: number = 0;
   /** 当前播放列表的信息 */
-  private _playlistSource: { type: string; id: number } = { type: 'album', id: 123 };
+  private _playlistSource: PlaylistSource = { type: 'album', id: 123 };
   /** 当前播放歌曲的详细信息 */
-  private _currentTrack: { id: number } = { id: 86827685 };
+  private _currentTrack: Track = { id: 86827685 } as Track;
   /** 当这个list不为空时，会优先播放这个list的歌 */
   private _playNextList: number[] = [];
   /** 是否是私人FM模式 */
   private _isPersonalFM: boolean = false;
   /** 私人FM当前歌曲 */
-  private _personalFMTrack: { id: number } = { id: 0 };
+  private _personalFMTrack: Track = { id: 0 } as Track;
   /** 私人FM下一首歌曲信息（为了快速加载下一首） */
-  private _personalFMNextTrack: { id: number } = { id: 0 };
+  private _personalFMNextTrack: Track = { id: 0 } as Track;
 
   /** The blob records for cleanup. */
   private createdBlobRecords: string[] = [];
